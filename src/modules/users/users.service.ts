@@ -43,4 +43,30 @@ export class UsersService {
     await this.repo.update(id, { role });
     return this.findById(id);
   }
+
+
+  async ensureSuperAdmin() {
+    const exists = await this.repo.findOne({
+      where: { role: UserRole.SUPERADMIN },
+    });
+
+    if (exists) return;
+
+    const hashedPass = await bcrypt.hash('Admin@123', 10);
+
+    const superAdmin = this.repo.create({
+      name: 'System Super Admin',
+      phoneNumber: '0000000000',
+      nic: '000000000V',
+      email: 'admin@system.com',
+      password: hashedPass,
+      role: UserRole.SUPERADMIN,
+    });
+
+    await this.repo.save(superAdmin);
+
+    console.log(
+      '🔥 SUPER ADMIN AUTO-CREATED → email: admin@system.com | password: Admin@123',
+    );
+  }
 }

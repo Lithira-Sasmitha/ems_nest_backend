@@ -15,6 +15,10 @@ export class AuthService {
     const user = await this.usersService.findByEmail(email);
     if (!user) return null;
 
+    if (user.role !== UserRole.SUPERADMIN) {
+      throw new UnauthorizedException('Only SUPER ADMIN can log in');
+    }
+
     const ok = await bcrypt.compare(pass, user.password);
     if (!ok) return null;
 

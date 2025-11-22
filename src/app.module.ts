@@ -1,8 +1,9 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { UsersService } from './modules/users/users.service';
 
 @Module({
   imports: [
@@ -22,4 +23,10 @@ import { AuthModule } from './modules/auth/auth.module';
     AuthModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements OnModuleInit {
+  constructor(private readonly usersService: UsersService) {}
+
+  async onModuleInit() {
+    await this.usersService.ensureSuperAdmin();
+  }
+}

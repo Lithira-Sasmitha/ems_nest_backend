@@ -8,10 +8,10 @@ export class AppService {
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
-  // Database test
+  
   async checkDbConnection() {
     try {
-      await this.dataSource.query('SELECT 1'); // test query
+      await this.dataSource.query('SELECT 1'); 
       return {
         status: 'connected',
         message: 'MySQL Database is working!',
