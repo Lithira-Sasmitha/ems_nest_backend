@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, Unique, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  Unique,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 export enum UserRole {
   USER = 'USER',
@@ -28,6 +35,10 @@ export class User {
 
   @Column()
   password: string;
+
+@Column({ type: 'text', nullable: true })
+refreshToken: string | null;
+
 
   @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
   role: UserRole;

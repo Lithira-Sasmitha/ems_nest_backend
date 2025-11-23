@@ -17,7 +17,7 @@ import { UsersModule } from '../users/users.module';
       inject: [ConfigService],
       useFactory: async (cfg: ConfigService) => {
         const secret = cfg.get<string>('JWT_SECRET') ?? 'default_secret';
-        const expires = cfg.get<string>('JWT_EXPIRES_IN') ?? '3600s';
+        const expires = cfg.get<string>('JWT_EXPIRES_IN') ?? '15m';
 
         return {
           secret,

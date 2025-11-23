@@ -44,7 +44,13 @@ export class UsersService {
     return this.findById(id);
   }
 
+  // generic update helper used by auth service (store/remove refresh token, etc)
+  async update(id: string, data: Partial<User>) {
+    await this.repo.update(id, data);
+    return this.findById(id);
+  }
 
+  // ensure at least one super admin exists on startup
   async ensureSuperAdmin() {
     const exists = await this.repo.findOne({
       where: { role: UserRole.SUPERADMIN },
@@ -52,13 +58,19 @@ export class UsersService {
 
     if (exists) return;
 
-    const hashedPass = await bcrypt.hash('Admin@123', 10);
+    const defaultEmail = process.env.SUPER_ADMIN_EMAIL ?? 'admin@system.com';
+    const defaultPass = process.env.SUPER_ADMIN_PASSWORD ?? 'Admin@123';
+    const defaultName = process.env.SUPER_ADMIN_NAME ?? 'System Super Admin';
+    const defaultPhone = process.env.SUPER_ADMIN_PHONE ?? '0000000000';
+    const defaultNic = process.env.SUPER_ADMIN_NIC ?? '000000000V';
+
+    const hashedPass = await bcrypt.hash(defaultPass, 10);
 
     const superAdmin = this.repo.create({
-      name: 'System Super Admin',
-      phoneNumber: '0000000000',
-      nic: '000000000V',
-      email: 'admin@system.com',
+      name: defaultName,
+      phoneNumber: defaultPhone,
+      nic: defaultNic,
+      email: defaultEmail.toLowerCase(),
       password: hashedPass,
       role: UserRole.SUPERADMIN,
     });
@@ -66,7 +78,7 @@ export class UsersService {
     await this.repo.save(superAdmin);
 
     console.log(
-      '🔥 SUPER ADMIN AUTO-CREATED → email: admin@system.com | password: Admin@123',
+      `🔥 SUPER ADMIN AUTO-CREATED → email: ${defaultEmail} | password: ${defaultPass}`,
     );
   }
 }
