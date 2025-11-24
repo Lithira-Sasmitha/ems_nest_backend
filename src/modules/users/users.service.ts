@@ -11,6 +11,9 @@ export class UsersService {
     private readonly repo: Repository<User>,
   ) {}
 
+  // -----------------------------
+  // CREATE NEW USER
+  // -----------------------------
   async create(data: {
     name: string;
     phoneNumber?: string;
@@ -19,7 +22,8 @@ export class UsersService {
     password: string;
     role?: UserRole;
   }): Promise<User> {
-    const hashed = await bcrypt.hash(data.password, 10);
+    const hashed = await bcrypt.hash(data.password, 10);//enuun --------------------------
+
     const user = this.repo.create({
       name: data.name,
       phoneNumber: data.phoneNumber,
@@ -28,36 +32,99 @@ export class UsersService {
       password: hashed,
       role: data.role ?? UserRole.USER,
     });
+
     return this.repo.save(user);
   }
 
+  // -----------------------------
+  // FIND USER BY EMAIL
+  // -----------------------------
   findByEmail(email: string) {
     return this.repo.findOne({ where: { email: email.toLowerCase() } });
   }
 
+  // -----------------------------
+  // FIND USER BY ID
+  // -----------------------------
   findById(id: string) {
     return this.repo.findOne({ where: { id } });
   }
 
-  async setRole(id: string, role: UserRole) {
-    await this.repo.update(id, { role });
-    return this.findById(id);
-  }
-
-  // generic update helper used by auth service (store/remove refresh token, etc)
+  // -----------------------------
+  // UPDATE ANY USER FIELD (used for refreshToken)
+  // -----------------------------
   async update(id: string, data: Partial<User>) {
     await this.repo.update(id, data);
     return this.findById(id);
   }
 
-  // ensure at least one super admin exists on startup
+  // -----------------------------
+  // CHANGE USER ROLE
+  // -----------------------------
+  async setRole(id: string, role: UserRole) {
+    await this.repo.update(id, { role });
+    return this.findById(id);
+  }
+
+  // -----------------------------
+  // GET ALL USERS (NO PASSWORD / NO REFRESH TOKEN)
+  // -----------------------------
+  async getAllUsers() {
+    return this.repo.find({
+      select: [
+        'id',
+        'name',
+        'email',
+        'phoneNumber',
+        'nic',
+        'role',
+        'createdAt',
+        'updatedAt',
+      ],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  // -----------------------------
+  // PAGINATED USERS LIST
+  // -----------------------------
+  async getUsersPaginated(page: number = 1, limit: number = 10) {
+    const skip = (page - 1) * limit;
+
+    const [users, total] = await this.repo.findAndCount({
+      skip,
+      take: limit,
+      order: { createdAt: 'DESC' },
+      select: [
+        'id',
+        'name',
+        'email',
+        'phoneNumber',
+        'nic',
+        'role',
+        'createdAt',
+        'updatedAt',
+      ],
+    });
+
+    return {
+      total,
+      page,
+      limit,
+      data: users,
+    };
+  }
+
+  // -----------------------------
+  // AUTO-CREATE SUPER ADMIN
+  // -----------------------------
   async ensureSuperAdmin() {
     const exists = await this.repo.findOne({
       where: { role: UserRole.SUPERADMIN },
     });
 
     if (exists) return;
-
+//seeder -----------------------
     const defaultEmail = process.env.SUPER_ADMIN_EMAIL ?? 'admin@system.com';
     const defaultPass = process.env.SUPER_ADMIN_PASSWORD ?? 'Admin@123';
     const defaultName = process.env.SUPER_ADMIN_NAME ?? 'System Super Admin';
@@ -76,7 +143,7 @@ export class UsersService {
     });
 
     await this.repo.save(superAdmin);
-
+/// logger-------------------
     console.log(
       `🔥 SUPER ADMIN AUTO-CREATED → email: ${defaultEmail} | password: ${defaultPass}`,
     );
